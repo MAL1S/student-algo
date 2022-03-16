@@ -4,6 +4,8 @@ import data.model.Project
 
 object GenerateProjects {
 
+    const val PROJECT_SIZE = 15
+
     val titles = listOf<String>(
         "1",
         "2",
@@ -31,14 +33,14 @@ object GenerateProjects {
         val projects = mutableListOf<Project>()
         val supervisors = GenerateSupervisors.generateSupervisors()
 
-        for (i in 0..20) {
+        for (i in 0..19) {
             val project = Project(
                 id = i,
                 title = titles[i],
-                places = 15,
-                difficulty = (1..3).random(),
+                places = PROJECT_SIZE,
                 supervisor_name = supervisors[(supervisors.indices).random()].fio
             )
+            projects.add(project)
         }
 
         return projects

@@ -1,6 +1,6 @@
 package data.model
 
 data class Skill(
-    var id: Int? = null,
-    var skill: String? = null
+    var id: Int,
+    var skill: String
 )
