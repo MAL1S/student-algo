@@ -6,6 +6,8 @@ object GenerateStudents {
 
     const val STUDENT_COUNT = 300
 
+    var emptyCount = 0
+
     fun generateStudents(): List<Student> {
         val students = mutableListOf<Student>()
 
@@ -14,8 +16,9 @@ object GenerateStudents {
                 id = i,
                 fio = GenerateNames.generateName(),
                 skills = GenerateSkills.generateSkills(),
-                training_group = ""
+                training_group = GenerateSkills.generateGroup()
             )
+            if (student.skills.isEmpty()) emptyCount++
             students.add(student)
         }
 

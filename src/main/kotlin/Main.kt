@@ -1,5 +1,5 @@
-import domain.FirstDistribution
+import domain.Distribution
 
 fun main(args: Array<String>) {
-    FirstDistribution().firstDistribute()
+    Distribution().firstDistribute()
 }

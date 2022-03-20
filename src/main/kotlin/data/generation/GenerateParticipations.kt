@@ -10,6 +10,8 @@ object GenerateParticipations {
     val projects = GenerateProjects.generateProjects()
     val freeStudents = mutableSetOf<Int>()
 
+    val firstFrequency = (0..1)
+
     fun generateParticipations(): MutableList<Participation> {
         val participations = mutableListOf<Participation>()
         val usedStudentToProjectCombinations = mutableMapOf<Int, MutableList<Project>>()
@@ -25,7 +27,11 @@ object GenerateParticipations {
                 }
 
                 if (priority == 1) {
-                    val project = projects[(projects.indices).random()]
+                    var ifFirst: Int? = null
+                    if (firstFrequency.random() == 0) {
+                        ifFirst = (0..1).random()
+                    }
+                    val project = projects[ifFirst ?: (projects.indices).random()]
                     val participation = Participation(
                         id = participationIndex++,
                         priority = priority,
@@ -46,7 +52,12 @@ object GenerateParticipations {
                         }
                     }
 
-                    var project = projects[(projects.indices).random()]
+                    var ifFirst: Int? = null
+                    if (firstFrequency.random() == 0) {
+                        ifFirst = (2..4).random()
+                    }
+
+                    var project = projects[ifFirst ?: (projects.indices).random()]
                     while (usedStudentToProjectCombinations[student.id]!!.contains(project)) {
                         project = projects[(projects.indices).random()]
                     }
@@ -67,9 +78,9 @@ object GenerateParticipations {
 //        for (i in participations) {
 //            println(i)
 //        }
-        println(participations.count { it.priority == 1 })
-        println(participations.count { it.priority == 2 })
-        println(participations.count { it.priority == 3 })
+        println("total 1 priority = " + participations.count { it.priority == 1 })
+        println("total 2 priority = " + participations.count { it.priority == 2 })
+        println("total 3 priority = " + participations.count { it.priority == 3 })
         println("---------------")
         return participations
     }

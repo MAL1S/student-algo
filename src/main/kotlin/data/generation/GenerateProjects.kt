@@ -1,6 +1,8 @@
 package data.generation
 
 import data.model.Project
+import data.model.ProjectSkills
+import data.model.Skill
 
 object GenerateProjects {
 
@@ -44,5 +46,27 @@ object GenerateProjects {
         }
 
         return projects
+    }
+
+    fun generateProjectSkills(projects: List<Project>): List<ProjectSkills> {
+        val list = mutableListOf<ProjectSkills>()
+
+        for (project in projects) {
+            val skills = mutableSetOf<Skill>()
+            for (i in 0..(3..6).random()) {
+                val skill = GenerateSkills.getRandomSkill()
+                if (!skills.contains(skill)) {
+                    list.add(
+                        ProjectSkills(
+                            projectId = project.id,
+                            skill = skill
+                        )
+                    )
+                }
+                skills.add(skill)
+            }
+        }
+
+        return list
     }
 }
