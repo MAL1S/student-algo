@@ -1,5 +1,7 @@
 package data.generation
 
+import STUDENT_MEAN_SKILL_COUNT
+import STUDENT_WITH_NULL_SKILLS_CHANCE
 import data.model.Skill
 
 object GenerateSkills {
@@ -88,12 +90,11 @@ object GenerateSkills {
     fun generateSkills(): List<Skill> {
         val resultSkills = mutableSetOf<Skill>()
 
-        if ((0..3).random() == 0) {
+        if (STUDENT_WITH_NULL_SKILLS_CHANCE.random() == 0) {
             return emptyList()
         }
 
-        val randomInt = (0..4).random()
-        for (i in 0..randomInt) {
+        for (i in 0..STUDENT_MEAN_SKILL_COUNT.random()) {
             resultSkills.add(
                 skills[(skills.indices).random()]
             )

@@ -1,5 +1,6 @@
 package data.generation
 
+import SUPERVISOR_COUNT
 import data.model.Supervisor
 
 object GenerateSupervisors {
@@ -7,10 +8,12 @@ object GenerateSupervisors {
     fun generateSupervisors(): List<Supervisor> {
         val supervisors = mutableListOf<Supervisor>()
 
-        for (i in 0..10) {
-            supervisors.add(
-                Supervisor(id = i, fio = GenerateNames.generateName())
-            )
+        for (i in 0 until SUPERVISOR_COUNT) {
+            var supervisor = Supervisor(id = i, fio = GenerateNames.generateName())
+            while (supervisors.find { it.fio == supervisor.fio } != null) {
+                supervisor = Supervisor(id = i, fio = GenerateNames.generateName())
+            }
+            supervisors.add(supervisor)
         }
 
         return supervisors

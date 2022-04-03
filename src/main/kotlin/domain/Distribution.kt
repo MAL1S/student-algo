@@ -1,10 +1,12 @@
 package domain
 
+import PROJECT_STUDENT_CAPACITY
 import data.generation.*
 import data.model.Participation
 import data.model.Project
 import data.model.Skill
 import data.model.State
+import kotlin.math.ceil
 
 class Distribution {
 
@@ -82,17 +84,6 @@ class Distribution {
         secondDistribution()
 
         showFinalParticipations()
-//        showFirstDistributionParticipations()
-//        println("---------------")
-////        participations.forEach {
-////            println(it)
-////        }
-////        val list = participations.map { it.studentId }
-////        println(list.size)
-////        println(HashSet<Int>(list).size)
-//
-//        println("----------")
-//        log.forEach { println(it) }
     }
 
     fun findNotAppliedStudents() {
@@ -113,11 +104,29 @@ class Distribution {
     fun sortProjectList(): List<Project> {
         val list = mutableListOf<Project>()
 
+        val later = mutableListOf<Project>()
+
         for (project in projects) {
-            if (project.places != 0) list.add(project)
+            if (project.places != 0) {
+
+                list.add(project)
+            }
         }
 
-        return list.sortedBy { it.places }
+        val firstlySorted = list.sortedBy { it.places }
+        val highDemandProjects = firstlySorted.filter { it.places <= ceil(PROJECT_STUDENT_CAPACITY/2.0) }
+        val lowDemandProjects = firstlySorted.subtract(highDemandProjects.toSet()).toMutableList()
+        val toEnd = mutableListOf<Project>()
+
+        for (project in lowDemandProjects) {
+            if (highDemandProjects.find { it.supervisor_name == project.supervisor_name } != null) {
+                toEnd.add(project)
+            }
+        }
+        lowDemandProjects.removeAll(toEnd)
+        lowDemandProjects.addAll(toEnd)
+
+        return highDemandProjects + lowDemandProjects
     }
 
     fun secondDistribution() {
@@ -218,6 +227,6 @@ class Distribution {
                 println("=== $participation ${empty ?: ""}")
             }
         }
-        println("${GenerateStudents.emptyCount} == $count")
+        //println("${GenerateStudents.emptyCount} == $count")
     }
 }

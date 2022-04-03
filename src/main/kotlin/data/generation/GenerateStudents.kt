@@ -1,10 +1,9 @@
 package data.generation
 
+import STUDENT_COUNT
 import data.model.Student
 
 object GenerateStudents {
-
-    const val STUDENT_COUNT = 300
 
     var emptyCount = 0
 
