@@ -85,6 +85,20 @@ object GenerateSkills {
         return groups.random()
     }
 
+    fun generateGroups(count: Int): List<String> {
+        val generatedGroups = mutableSetOf<String>()
+
+        for (i in 1 .. count) {
+            var group = generateGroup()
+            while (generatedGroups.contains(group)) {
+                group = generateGroup()
+            }
+            generatedGroups.add(group)
+        }
+
+        return generatedGroups.toList()
+    }
+
     fun getRandomSkill() = skills[skills.indices.random()]
 
     fun generateSkills(): List<Skill> {

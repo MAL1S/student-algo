@@ -25,17 +25,19 @@ object GenerateParticipations {
         for (priority in (1..3)) {
             var i = 0
             for (student in students) {
-                if (i++ <  FIRST_ITERATION_SKIP_COUNT) {
+                if (i++ < FIRST_ITERATION_SKIP_COUNT) {
                     if (priority == 1) freeStudents.add(student.id)
                     continue
                 }
+                val thisGroupProjects = projects.filter { it.groups.contains(student.training_group) }
 
                 if (priority == 1) {
                     var ifFirst: Int? = null
                     if (FIRST_FREQUENCY.random() == 0) {
-                        ifFirst = FIRST_ITERATION_DEMAND.random()
+                        ifFirst = if (thisGroupProjects.size > 2) (0..1).random() else null
                     }
-                    val project = projects[ifFirst ?: (projects.indices).random()]
+
+                    val project = thisGroupProjects[ifFirst ?: (thisGroupProjects.indices).random()]
                     val participation = Participation(
                         id = participationIndex++,
                         priority = priority,
@@ -58,12 +60,12 @@ object GenerateParticipations {
 
                     var ifFirst: Int? = null
                     if (FIRST_FREQUENCY.random() == 0) {
-                        ifFirst = SECOND_ITERATION_DEMAND.random()
+                        ifFirst = if (thisGroupProjects.size > 2) (0..1).random() else null
                     }
 
-                    var project = projects[ifFirst ?: (projects.indices).random()]
+                    var project = thisGroupProjects[ifFirst ?: (thisGroupProjects.indices).random()]
                     while (usedStudentToProjectCombinations[student.id]!!.contains(project)) {
-                        project = projects[(projects.indices).random()]
+                        project = thisGroupProjects[(thisGroupProjects.indices).random()]
                     }
 
                     val participation = Participation(
@@ -79,9 +81,6 @@ object GenerateParticipations {
             }
         }
 
-//        for (i in participations) {
-//            println(i)
-//        }
         println("total 1 priority = " + participations.count { it.priority == 1 })
         println("total 2 priority = " + participations.count { it.priority == 2 })
         println("total 3 priority = " + participations.count { it.priority == 3 })

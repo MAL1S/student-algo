@@ -3,7 +3,10 @@ package data.model
 data class Project(
     var id: Int,
     var title: String,
-    var places: Int,
+    val placesLower: Int,
+    val placesUpper: Int,
+    var freePlaces: Int,
+    var groups: List<String>,
 //    var goal: String,
 //    var idea: String,
 //    var difficulty: Int,
