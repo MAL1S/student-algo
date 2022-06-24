@@ -1,4 +1,4 @@
-import domain.Distribution
+import domain.distribution.Distribution
 
 fun main() {
     Distribution().execute()

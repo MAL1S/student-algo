@@ -13,6 +13,10 @@ repositories {
 }
 
 dependencies {
+    implementation("org.apache.poi:poi-ooxml:3.9")
+    implementation("org.apache.commons:commons-csv:1.5")
+    implementation("com.google.code.gson:gson:2.8.2")
+    implementation("com.grapecity.documents:gcexcel:2.1.0")
     testImplementation(kotlin("test"))
 }
 

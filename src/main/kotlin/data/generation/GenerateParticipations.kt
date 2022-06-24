@@ -12,9 +12,11 @@ import data.model.Student
 
 object GenerateParticipations {
 
-    val students = GenerateStudents.generateStudents()
-    val projects = GenerateProjects.generateProjects()
-    val freeStudents = mutableSetOf<Int>()
+    //GenerateStudents.getStudentsFromFile("E:/itstud.xlsx", "E:/exception.xlsx")
+    //GenerateProjects.getProjectsFromFile("E:/it.xlsx")
+    val students = emptyList<Student>()
+    val projects = emptyList<Project>()
+    val freeStudents = mutableSetOf<Student>()
 
     fun generateParticipations(): MutableList<Participation> {
         val participations = mutableListOf<Participation>()
@@ -26,10 +28,13 @@ object GenerateParticipations {
             var i = 0
             for (student in students) {
                 if (i++ < FIRST_ITERATION_SKIP_COUNT) {
-                    if (priority == 1) freeStudents.add(student.id)
+                    if (priority == 1) {
+                        freeStudents.add(student)
+                    }
                     continue
                 }
-                val thisGroupProjects = projects.filter { it.groups.contains(student.training_group) }
+                val thisGroupProjects = projects.filter {
+                    it.groups.contains(student.training_group) }
 
                 if (priority == 1) {
                     var ifFirst: Int? = null
