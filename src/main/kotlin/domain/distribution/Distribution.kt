@@ -36,17 +36,21 @@ class Distribution(
         distributeParticipations()
         findNotAppliedStudents()
         distributeSilentStudents()
-        distributeExcessStudents()
+        distributeSilentStudentsToFull()
+//        distributeExcessStudents()
         ExportDataToExcel.writeProjectsWithStudents(
             students = students,
             projects = projects,
             participations = participations,
-            filePath = ""
+            filePath = "F:/yarmarka_data/output/studentsWithProjects.xlsx"
         )
         ExportDataToExcel.writeFreeStudents(
             students = notApplied,
-            filePath = ""
+            filePath = "F:/yarmarka_data/output/freeStudents.xlsx"
         )
+        projects.forEach {
+            println("${it.freePlaces} ${it.groups}")
+        }
     }
 
     private fun distributeParticipations() {
@@ -77,6 +81,9 @@ class Distribution(
                 }
             }
         }
+//        participations.forEach {
+//            println(it)
+//        }
 //        println("1 priority = " + participations.count { it.priority == 1 && it.stateId == 1 })
 //        println("2 priority = " + participations.count { it.priority == 2 && it.stateId == 1 })
 //        println("3 priority = " + participations.count { it.priority == 3 && it.stateId == 1 })
@@ -89,10 +96,12 @@ class Distribution(
 
     private fun findNotAppliedStudents() {
         val notAppliedParticipations = participations.filter { it.stateId == 0 }
-        val notAppliedStudents = HashSet(participations.filter { it.stateId == 0 }.map { it.studentId })
+        val notAppliedStudents = participations.filter { it.stateId == 0 }.map { it.studentId }.toSet()
 
         notApplied.addAll(notAppliedStudents.map { students.find { stud -> stud.id == it }!! })
-        //println("free students count = " + distributionPreparation.freeStudents.size)
+
+        println("free students due to not applied = ${notApplied.size}")
+        println("free students count = " + distributionPreparation.freeStudents.size)
 
         notApplied.addAll(distributionPreparation.freeStudents)
 
@@ -105,6 +114,7 @@ class Distribution(
         for (i in notAppliedParticipations.map { it.id }) {
             participations[i].stateId = 2
         }
+        println("not applied = ${notApplied.size}")
     }
 
     private fun sortProjectList(): List<Project> {
@@ -130,6 +140,10 @@ class Distribution(
         lowDemandProjects.removeAll(toEnd)
         lowDemandProjects.addAll(toEnd)
 
+//        (highDemandProjects + lowDemandProjects).forEach {
+//            println(it.freePlaces)
+//        }
+
         return highDemandProjects + lowDemandProjects
     }
 
@@ -144,13 +158,37 @@ class Distribution(
                     participations.add(
                         Participation(
                             id = participationIndex++,
-                            priority = 0,
+                            priority = 4,
                             projectId = project.id,
                             studentId = bestMatchingStudent.id,
                             stateId = 1
                         )
                     )
-                    projects[project.id].freePlaces--
+                    projects[projects.indexOfFirst { it.id == project.id }].freePlaces--
+                } else {
+                    break
+                }
+            }
+        }
+    }
+
+    private fun distributeSilentStudentsToFull() {
+        for (project in sortProjectList()) {
+            val places = PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - project.freePlaces
+            for (i in 0 until places) {
+                val bestMatchingStudent: Student? = findBestMatch(project = project)
+
+                if (bestMatchingStudent != null) {
+                    participations.add(
+                        Participation(
+                            id = participationIndex++,
+                            priority = 4,
+                            projectId = project.id,
+                            studentId = bestMatchingStudent.id,
+                            stateId = 1
+                        )
+                    )
+                    projects[projects.indexOfFirst { it.id == project.id }].freePlaces--
                 } else {
                     break
                 }
@@ -166,11 +204,11 @@ class Distribution(
 
         for (project in excessProjects) {
 
-            println("${project.id}")
+            //println("${project.id}")
             val excessParticipations = participations.filter { it.projectId == project.id }
 
             for (i in excessParticipations) {
-                val student = students[i.studentId]
+                val student = students.find { it.id == i.studentId }!!
                 val suitedProjects =
                     sortedProjects.filter {
                         it.id != project.id &&
@@ -182,7 +220,7 @@ class Distribution(
                 participations.add(
                     Participation(
                         id = participationIndex++,
-                        priority = -1,
+                        priority = 5,
                         projectId = suitedProject!!.id,
                         studentId = student.id,
                         stateId = 1
@@ -202,7 +240,7 @@ class Distribution(
 
         val notAppliedForThisProject =
             notApplied.filter { project.groups.contains(it.training_group) }
-        println(notAppliedForThisProject)
+        //println("${project.freePlaces} ${project.groups} $notAppliedForThisProject")
 
         if (notAppliedForThisProject.isEmpty()) {
             return null

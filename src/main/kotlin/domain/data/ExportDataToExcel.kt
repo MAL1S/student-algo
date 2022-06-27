@@ -15,8 +15,19 @@ object ExportDataToExcel {
     ) {
         val workBook = Workbook()
         for ((index, project) in projects.withIndex()) {
+            workBook.worksheets.add()
             val workSheet = workBook.worksheets.get(index)
-            workSheet.name = project.title
+            try {
+                workSheet.name = project.title
+                    .replace("?", "")
+                    .replace(":", "")
+                    .replace("/", " ")
+            } catch (e: Exception) {
+                workSheet.name = (project.title + "1")
+                    .replace("?", "")
+                    .replace(":", "")
+                    .replace("/", " ")
+            }
 
             val projectParticipations = participations.filter { it.projectId == project.id && it.stateId == 1 }
             var participationIndexExcel = 1
@@ -38,7 +49,8 @@ object ExportDataToExcel {
                 arrayOf("ФИО", "Группа", "Номер зачетной книжки", "Номер приоритета", "Активность")
             participationIndexExcel++
 
-            for (p in projectParticipations) {
+            println(projectParticipations)
+            for (p in projectParticipations.sortedBy { it.priority }) {
                 val student = students.find { it.id == p.studentId }
 
                 workSheet.getRange("A$participationIndexExcel:F$participationIndexExcel").value = arrayOf(
@@ -46,7 +58,7 @@ object ExportDataToExcel {
                     student?.realGroup,
                     student?.id,
                     p.priority,
-                    if (p.stateId == 0) "Молчун" else if (p.stateId == 1) "Активный" else "Активный, но на его проекте было мало участников"
+                    if (p.stateId == 4) "Молчун" else if (p.stateId == 1) "Активный" else "Активный, но на его проекте было мало участников"
                 )
                 participationIndexExcel++
             }
@@ -60,12 +72,14 @@ object ExportDataToExcel {
         workSheet.name = "Не зачисленные студенты"
         workSheet.getRange("A1:E1").value =
             arrayOf("ФИО", "Группа", "Номер зачетной книжки")
-        for ((index, i) in students.withIndex()) {
+        var index = 1
+        for (i in students) {
             workSheet.getRange("A$index:C$index").value = arrayOf(
                 i.fio,
                 i.realGroup,
                 i.id
             )
+            index++
         }
         workBook.save(filePath)
     }
