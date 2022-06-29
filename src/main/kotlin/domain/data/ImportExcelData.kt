@@ -126,7 +126,7 @@ object ImportExcelData {
             student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
             student.realGroup = row.getCell(6).stringCellValue
 
-            if (exceptionList.find { it.fio == student.fio && it.training_group == student.training_group } != null || student.training_group == "ИБб" || student.training_group == "ИИКб") {
+            if (exceptionList.find { it.fio == student.fio && it.training_group == student.training_group } != null) {
                 continue
             }
 

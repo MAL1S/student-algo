@@ -15,7 +15,9 @@ import domain.data.ExportDataToExcel
 class Distribution(
     private val students: MutableList<Student>,
     private val projects: MutableList<Project>,
-    private val participations: MutableList<Participation>
+    private val participations: MutableList<Participation>,
+    private val institute: String,
+    private val specialities: List<String>
 ) {
 
     private val distributionPreparation = DistributionPreparation(
@@ -36,17 +38,17 @@ class Distribution(
         distributeParticipations()
         findNotAppliedStudents()
         distributeSilentStudents()
-        distributeSilentStudentsToFull()
+        //distributeSilentStudentsToFull()
 //        distributeExcessStudents()
         ExportDataToExcel.writeProjectsWithStudents(
             students = students,
             projects = projects,
             participations = participations,
-            filePath = "F:/yarmarka_data/output/studentsWithProjects.xlsx"
+            institute = institute
         )
         ExportDataToExcel.writeFreeStudents(
             students = notApplied,
-            filePath = "F:/yarmarka_data/output/freeStudents.xlsx"
+            institute = institute
         )
         projects.forEach {
             println("${it.freePlaces} ${it.groups}")
@@ -58,7 +60,12 @@ class Distribution(
             for (project in projects) {
                 if (project.freePlaces != 0) {
                     val participationsForCurrentProject =
-                        participations.filter { it.projectId == project.id && it.priority == priority && it.stateId == 0 }
+                        participations.filter {
+                            it.projectId == project.id &&
+                                    it.priority == priority &&
+                                    it.stateId == 0 &&
+                                    students.map { stud -> stud.id }.contains(it.studentId)
+                        }
                             .toMutableList()
 
                     if (participationsForCurrentProject.isNotEmpty()) {
@@ -96,7 +103,9 @@ class Distribution(
 
     private fun findNotAppliedStudents() {
         val notAppliedParticipations = participations.filter { it.stateId == 0 }
-        val notAppliedStudents = participations.filter { it.stateId == 0 }.map { it.studentId }.toSet()
+        val notAppliedStudents =
+            participations.filter { it.stateId == 0 && students.map { stud -> stud.id }.contains(it.studentId) }
+                .map { it.studentId }.toSet()
 
         notApplied.addAll(notAppliedStudents.map { students.find { stud -> stud.id == it }!! })
 
@@ -112,7 +121,7 @@ class Distribution(
 //        println(applied)
 
         for (i in notAppliedParticipations.map { it.id }) {
-            participations[i].stateId = 2
+            participations.find { it.id == i }!!.stateId = 2
         }
         println("not applied = ${notApplied.size}")
     }
@@ -149,8 +158,9 @@ class Distribution(
 
     private fun distributeSilentStudents() {
         for (project in sortProjectList()) {
-            val places =
-                project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
+            var places = project.freePlaces
+            //project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
+            if (project.groups.contains("ИИКб")) places = 10000
             for (i in 0 until places) {
                 val bestMatchingStudent: Student? = findBestMatch(project = project)
 
@@ -237,19 +247,34 @@ class Distribution(
 
     private fun findBestMatch(project: Project): Student? {
         var bestMatchingStudent: Student? = null
+        var special = project.groups.contains("ИИКб")
 
-        val notAppliedForThisProject =
-            notApplied.filter { project.groups.contains(it.training_group) }
+//        val notAppliedForThisProject =
+//            notApplied.filter { project.groups.contains(it.training_group) }
         //println("${project.freePlaces} ${project.groups} $notAppliedForThisProject")
 
-        if (notAppliedForThisProject.isEmpty()) {
+        if (notApplied.isEmpty()) {
             return null
         }
 
-        for (student in notAppliedForThisProject) {
-            if (project.groups.contains(student.training_group)) {
-                bestMatchingStudent = student
+        var groupStudent: Student? = null
+        var toFillStudent: Student? = null
+
+        for (student in notApplied) {
+            if (special) {
+                if (student.training_group == "ИИКб") {
+                    println(student)
+                    bestMatchingStudent = student
+                    break
+                }
+            } else {
+                if (groupStudent == null && project.groups.contains(student.training_group)) {
+                    groupStudent = student
+                } else if (toFillStudent == null) {
+                    toFillStudent = student
+                }
             }
+
 //            var isEmpty: Boolean
 //            var similarities: Int
 //
@@ -285,6 +310,8 @@ class Distribution(
 //                }
 //            }
         }
+
+        if (!special) bestMatchingStudent = groupStudent ?: toFillStudent
 
 //        if (bestMatchingStudent == null) {
 //            notApplied.remove(bestMatchingEmptyStudent!!)

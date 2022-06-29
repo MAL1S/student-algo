@@ -34,6 +34,21 @@ object ImportCsvData {
         return participations
     }
 
+    fun getSpecialitiesFromFile(filePath: String): Map<String, List<String>> {
+        val specialities = mutableMapOf<String, MutableList<String>>()
+        val split = splitFileFromCsvFormat(filePath)
+        for ((index, str) in split.withIndex()) {
+            if (index == 0) continue
+            val s = str.splitWithQuoteBlocks()
+            val spec = s[1]
+            val inst = s[2]
+            val value = specialities.getOrDefault(inst, emptyList<String>().toMutableList())
+            value.add(spec)
+            specialities[inst] = value
+        }
+        return specialities
+    }
+
     private fun String.replaceAllExtraSymbolsInProject(): String {
         return this.replace("&quot", "")
             .replace("&laquo", "")

@@ -11,7 +11,8 @@ object ExportDataToExcel {
         students: List<Student>,
         projects: List<Project>,
         participations: List<Participation>,
-        filePath: String
+        institute: String,
+        filePath: String = "F:/yarmarka_data/output/$institute.xlsx"
     ) {
         val workBook = Workbook()
         for ((index, project) in projects.withIndex()) {
@@ -49,10 +50,11 @@ object ExportDataToExcel {
                 arrayOf("ФИО", "Группа", "Номер зачетной книжки", "Номер приоритета", "Активность")
             participationIndexExcel++
 
-            println(projectParticipations)
+            //println(projectParticipations)
             for (p in projectParticipations.sortedBy { it.priority }) {
                 val student = students.find { it.id == p.studentId }
 
+                //println("${p.studentId} $student")
                 workSheet.getRange("A$participationIndexExcel:F$participationIndexExcel").value = arrayOf(
                     student?.fio,
                     student?.realGroup,
@@ -66,7 +68,11 @@ object ExportDataToExcel {
         workBook.save(filePath)
     }
 
-    fun writeFreeStudents(students: List<Student>, filePath: String) {
+    fun writeFreeStudents(
+        students: List<Student>,
+        institute: String,
+        filePath: String = "F:/yarmarka_data/output/free_$institute.xlsx"
+    ) {
         val workBook = Workbook()
         val workSheet = workBook.worksheets.get(0)
         workSheet.name = "Не зачисленные студенты"
