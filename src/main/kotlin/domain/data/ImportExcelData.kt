@@ -109,8 +109,10 @@ object ImportExcelData {
             student.fio = row.getCell(0).stringCellValue
             val group = row.getCell(1).stringCellValue
                 .replace(" ", "")
+            //println(group)
             student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
 
+            //println(student)
             exceptionList.add(student)
         }
 
@@ -126,7 +128,8 @@ object ImportExcelData {
             student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
             student.realGroup = row.getCell(6).stringCellValue
 
-            if (exceptionList.find { it.fio == student.fio && it.training_group == student.training_group } != null) {
+            if (exceptionList.find { it.fio == student.fio && it.training_group.lowercase() == student.training_group.lowercase() } != null) {
+                //println(student)
                 continue
             }
 

@@ -57,6 +57,7 @@ object ImportCsvData {
             .replace("</span>", "")
             .replace("&nbsp", "")
             .replace("\n", "")
+            .replace("<br>", ";")
     }
 
     private fun String.replaceAllExtraSymbolsInParticipation(): String {
@@ -76,13 +77,14 @@ object ImportCsvData {
 
         val project = Project(
             id = split[0].toInt(),
-            title = split[1],
-            places = split[2].toInt(),
-            freePlaces = split[2].toInt(),
-            supervisors = split[3].split(","),
-            groups = split[4].split(";"),
-            skills = split[5].split(";")
+            title = split[3],
+            places = split[4].toInt(),
+            freePlaces = split[4].toInt(),
+            supervisors = split[15].split(","),
+            groups = split[18].replace(" ", "").split(";"),
+            skills = split[19].split(";")
         )
+        println(project)
 
         return if (project.places == 100) null
         else project
@@ -97,11 +99,21 @@ object ImportCsvData {
             .split(",")
         //println(split)
 
+        //old file
+//        return Participation(
+//            id = split[0].toInt(),
+//            priority = split[3].toInt(),
+//            projectId = split[4].toInt(),
+//            studentId = split[6].toInt(),
+//            stateId = 0
+//        )
+
+        //new file
         return Participation(
-            id = index,
+            id = split[0].toInt(),
             priority = split[3].toInt(),
-            projectId = split[4].toInt(),
-            studentId = split[6].toInt(),
+            projectId = split[5].toInt(),
+            studentId = split[7].toInt(),
             stateId = 0
         )
     }
@@ -117,6 +129,7 @@ object ImportCsvData {
             }
 
             if (ch == ',' && !wasQuote) {
+                //println(temp)
                 result.add(temp)
                 temp = ""
             } else {
