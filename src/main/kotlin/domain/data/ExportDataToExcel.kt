@@ -22,7 +22,9 @@ object ExportDataToExcel {
         projects: List<Project>,
         participations: List<Participation>,
         institute: String,
-        filePath: String = "F:/yarmarka_data/output/$institute.xlsx"
+        isUniformly: Boolean = false,
+        filePath: String = if (isUniformly) "F:/yarmarka_data/output/равномерно_$institute.xlsx"
+        else "F:/yarmarka_data/output/$institute.xlsx"
     ) {
         val workBook = Workbook()
         //workBook.worksheets.add()
@@ -35,9 +37,9 @@ object ExportDataToExcel {
         statIndex++
 
         for (project in projects) {
-            val partsCount = participations.count { it.projectId == project.id && it.stateId == 1}
-            println(project)
-            println("$partsCount ${participations.count { it.projectId == project.id && it.priority == 5 }}")
+            val partsCount = participations.count { it.projectId == project.id && it.stateId == 1 }
+            //println(project)
+            //println("$partsCount ${participations.count { it.projectId == project.id && it.priority == 5 }}")
             workSheetStats.getRange("A$statIndex:F$statIndex").value =
                 arrayOf(project.title,
                     project.id,
@@ -66,13 +68,13 @@ object ExportDataToExcel {
         for (project in projects) {
             workBook.worksheets.add()
             val workSheet = workBook.worksheets.get(index)
-            println(project.title)
+            //println(project.title)
             val tempName = project.title
                 .replace("?", "")
                 .replace(":", "")
                 .replace("/", " ")
             workSheet.name = "\"" + tempName
-                .substring(0, if (tempName.length < 27) tempName.length else 27) + "\"${index-1}"
+                .substring(0, if (tempName.length < 27) tempName.length else 27) + "\"${index - 1}"
 //            try {
 //                workSheet.name = project.title
 //                    .replace("?", "")
@@ -104,7 +106,7 @@ object ExportDataToExcel {
                 arrayOf("ФИО", "Группа", "Номер зачетной книжки", "Номер приоритета", "Активность")
             participationIndexExcel++
 
-            println(projectParticipations)
+            //println(projectParticipations)
             for (p in projectParticipations.sortedBy { it.priority }) {
                 val student = students.find { it.id == p.studentId }
 
@@ -121,17 +123,18 @@ object ExportDataToExcel {
             index++
         }
         workBook.save(filePath)
-        deleteShit(filePath, index, institute)
+        deleteShit(filePath, index, institute, isUniformly)
     }
 
-    private fun deleteShit(filePath: String, lastSheetNumber: Int, institute: String) {
-        println(filePath)
-        println(lastSheetNumber)
+    private fun deleteShit(filePath: String, lastSheetNumber: Int, institute: String, isUniformly: Boolean) {
+        //println(filePath)
+        //println(lastSheetNumber)
         val inputStream = FileInputStream(filePath)
         val book = WorkbookFactory.create(inputStream)
         //book.removeSheetAt(lastSheetNumber)
         book.removeSheetAt(lastSheetNumber)
-        val f = File("F:/yarmarka_data/output/output/$institute.xlsx")
+        val f = if (isUniformly) File("F:/yarmarka_data/output/output/равномерно_$institute.xlsx")
+        else File("F:/yarmarka_data/output/output/$institute.xlsx")
         f.createNewFile()
         val outputStream = FileOutputStream(f)
         book.write(outputStream)

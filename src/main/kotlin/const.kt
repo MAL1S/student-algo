@@ -14,5 +14,6 @@ const val STUDENT_COUNT = 300 //количесто студентов
 const val PROJECTS_COUNT = 30 //количество проектов
 const val PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY = 9 //граница "от" для вместимости проектов
 const val PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY = 15 //граница "до" для вместимости проектов
-const val PROJECT_MIN_CAPACITY = 8 //минимальная вместимость проекта
+const val PROJECT_MIN_CAPACITY = 9 //минимальная вместимость проекта
 const val PROJECT_LOWER_DEMAND_COEFFICIENT = 0.6
+const val PROJECT_UNIFORM_LOWER_BOUNDARY = 11 //минимальная граница при равномерном распределении

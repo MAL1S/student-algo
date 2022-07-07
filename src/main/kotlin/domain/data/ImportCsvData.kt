@@ -84,7 +84,7 @@ object ImportCsvData {
             groups = split[18].replace(" ", "").split(";"),
             skills = split[19].split(";")
         )
-        println(project)
+        //println(project)
 
         return if (project.places == 100) null
         else project

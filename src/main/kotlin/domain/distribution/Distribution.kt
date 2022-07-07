@@ -9,8 +9,8 @@ import data.model.Project
 import data.model.Skill
 import data.model.Student
 import kotlin.math.ceil
-import com.grapecity.documents.excel.Workbook
 import domain.data.ExportDataToExcel
+import util.containsGroup
 
 class Distribution(
     private val students: MutableList<Student>,
@@ -18,6 +18,7 @@ class Distribution(
     val participations: MutableList<Participation>,
     private val institute: String,
     private val specialities: List<String>,
+    private val specialGroups: List<String>,
     private val hasSpecialGroups: Boolean = false
 ) {
 
@@ -30,21 +31,21 @@ class Distribution(
     private var notAppliedStudents = setOf<Int>()
     var applied = 0
 
-    private var participationIndex: Int = participations[participations.lastIndex].id+1
+    private var participationIndex: Int = participations[participations.lastIndex].id + 1
 
     init {
         distributionPreparation.prepare()
     }
 
-    fun execute() {
-        projects.forEach {
-            //println(it)
-        }
+    private fun preExecute() {
         distributeParticipations()
         findNotAppliedStudents()
         if (hasSpecialGroups) distributeSpecialGroups()
+    }
+
+    fun execute() {
+        preExecute()
         distributeSilentStudents()
-        //distributeSilentStudentsToFull()
         distributeExcessStudents()
         ExportDataToExcel.writeProjectsWithStudents(
             students = students,
@@ -53,15 +54,22 @@ class Distribution(
             participations = participations,
             institute = institute
         )
-//        ExportDataToExcel.writeFreeStudents(
-//            students = notApplied,
-//            institute = institute
-//        )
-        println(institute)
-        projects.forEach {
-            println("${it.freePlaces} ${participations.count { part -> part.projectId == it.id && part.stateId == 1 }} ${it.groups} ${it.id} - ${it.title}")
-        }
-        println("--------------------")
+        logResults()
+    }
+
+    fun executeUniformly() {
+        preExecute()
+        distributeSilentStudents(isUniform = true)
+        distributeSilentStudentsToFullUniformly()
+        ExportDataToExcel.writeProjectsWithStudents(
+            students = students,
+            notApplied = notApplied,
+            projects = projects,
+            participations = participations,
+            institute = institute,
+            isUniformly = true
+        )
+        logResults()
     }
 
     private fun distributeParticipations() {
@@ -97,17 +105,6 @@ class Distribution(
                 }
             }
         }
-//        participations.forEach {
-//            println(it)
-//        }
-//        println("1 priority = " + participations.count { it.priority == 1 && it.stateId == 1 })
-//        println("2 priority = " + participations.count { it.priority == 2 && it.stateId == 1 })
-//        println("3 priority = " + participations.count { it.priority == 3 && it.stateId == 1 })
-//        println("not applied count = " + participations.count { it.stateId == 0 })
-//        findNotAppliedStudents()
-//        println("not applied size = " + notApplied.size)
-//        println("-------------")
-//        sortProjectList().forEach { println(it) }
     }
 
     private fun findNotAppliedStudents() {
@@ -118,21 +115,11 @@ class Distribution(
 
         notApplied.addAll(notAppliedStudents.map { students.find { stud -> stud.id == it }!! })
 
-        //println("free students due to not applied = ${notApplied.size}")
-        //println("free students count = " + distributionPreparation.freeStudents.size)
-
         notApplied.addAll(distributionPreparation.freeStudents)
-
-//        println(students.count())
-//        println(participations.map { it.studentId }.count())
-//        println(participations.map { it.studentId }.toSet().count())
-//        println(notApplied.toSet().count())
-//        println(applied)
 
         for (i in notAppliedParticipations.map { it.id }) {
             participations.find { it.id == i }!!.stateId = 2
         }
-        //println("not applied = ${notApplied.size}")
     }
 
     private fun sortProjectList(): List<Project> {
@@ -157,10 +144,6 @@ class Distribution(
         }
         lowDemandProjects.removeAll(toEnd)
         lowDemandProjects.addAll(toEnd)
-
-//        (highDemandProjects + lowDemandProjects).forEach {
-//            println(it.freePlaces)
-//        }
 
         return highDemandProjects + lowDemandProjects
     }
@@ -188,10 +171,15 @@ class Distribution(
         }
     }
 
-    private fun distributeSilentStudents() {
+    private fun distributeSilentStudents(isUniform: Boolean = false) {
+        //println("sorted = ${sortProjectList()}")
         for (project in sortProjectList()) {
-            var places = project.freePlaces
-            //project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
+            val places: Int = if (isUniform) {
+                project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
+            } else {
+                project.freePlaces
+                //project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
+            }
             for (i in 0 until places) {
                 val bestMatchingStudent: Student? = findBestMatch(project = project)
 
@@ -208,6 +196,40 @@ class Distribution(
                     projects[projects.indexOf(project)].freePlaces--
                     //println("${project.id} ${projects[projects.indexOf(project)].freePlaces}")
                 } else {
+                    break
+                }
+            }
+        }
+    }
+
+    private fun distributeSilentStudentsToFullUniformly() {
+        val projects = projects
+            .filter { !containsGroup(it, specialGroups) }
+            .sortedBy { it.freePlaces }
+            .reversed()
+
+        var areProjectsFull = false
+        var maxFreeStudentsCount = projects.maxOfOrNull { it.freePlaces }!!
+
+        while (!areProjectsFull && notApplied.isNotEmpty() && maxFreeStudentsCount > 0) {
+            for (project in projects) {
+                if (project.freePlaces != maxFreeStudentsCount) continue
+
+                val bestMatchingStudent = findBestMatch(project = project)
+                if (bestMatchingStudent != null) {
+                    participations.add(
+                        Participation(
+                            id = participationIndex++,
+                            priority = if (notAppliedStudents.contains(bestMatchingStudent.id)) 4 else 5,
+                            projectId = project.id,
+                            studentId = bestMatchingStudent.id,
+                            stateId = 1
+                        )
+                    )
+                    projects[projects.indexOf(project)].freePlaces--
+                    maxFreeStudentsCount = projects.maxOfOrNull { it.freePlaces }!!
+                } else {
+                    areProjectsFull = true
                     break
                 }
             }
@@ -242,8 +264,9 @@ class Distribution(
         val excessProjects =
             projects.filter { it.freePlaces > (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_MIN_CAPACITY) && it.freePlaces != it.places }
                 .reversed()
+        println(excessProjects.size)
         excessProjects.forEach {
-            //println(it)
+            println("free places = ${it.freePlaces}")
         }
         val sortedProjects = projects.sortedBy { it.freePlaces }
 
@@ -289,10 +312,6 @@ class Distribution(
     private fun findBestMatch(project: Project): Student? {
         var bestMatchingStudent: Student? = null
         var special = project.groups.contains("ИИКб")
-
-//        val notAppliedForThisProject =
-//            notApplied.filter { project.groups.contains(it.training_group) }
-        //println("${project.freePlaces} ${project.groups} $notAppliedForThisProject")
 
         if (notApplied.isEmpty()) {
             return null
@@ -373,5 +392,17 @@ class Distribution(
         }
 
         return count
+    }
+
+    private fun logResults() {
+        println(institute)
+        projects.forEach {
+            println("${it.freePlaces} ${participations.count { part -> part.projectId == it.id && part.stateId == 1 }} ${it.groups} ${it.id} - ${it.title}")
+        }
+        println("--------------------")
+    }
+
+    private fun logProjectStudents() {
+
     }
 }
