@@ -77,14 +77,6 @@ class Distribution(
                 }
             }
         }
-//        println("1 priority = " + participations.count { it.priority == 1 && it.stateId == 1 })
-//        println("2 priority = " + participations.count { it.priority == 2 && it.stateId == 1 })
-//        println("3 priority = " + participations.count { it.priority == 3 && it.stateId == 1 })
-//        println("not applied count = " + participations.count { it.stateId == 0 })
-//        findNotAppliedStudents()
-//        println("not applied size = " + notApplied.size)
-//        println("-------------")
-//        sortProjectList().forEach { println(it) }
     }
 
     private fun findNotAppliedStudents() {
@@ -92,15 +84,8 @@ class Distribution(
         val notAppliedStudents = HashSet(participations.filter { it.stateId == 0 }.map { it.studentId })
 
         notApplied.addAll(notAppliedStudents.map { students.find { stud -> stud.id == it }!! })
-        //println("free students count = " + distributionPreparation.freeStudents.size)
 
         notApplied.addAll(distributionPreparation.freeStudents)
-
-//        println(students.count())
-//        println(participations.map { it.studentId }.count())
-//        println(participations.map { it.studentId }.toSet().count())
-//        println(notApplied.toSet().count())
-//        println(applied)
 
         for (i in notAppliedParticipations.map { it.id }) {
             participations[i].stateId = 2
@@ -202,7 +187,6 @@ class Distribution(
 
         val notAppliedForThisProject =
             notApplied.filter { project.groups.contains(it.training_group) }
-        println(notAppliedForThisProject)
 
         if (notAppliedForThisProject.isEmpty()) {
             return null
