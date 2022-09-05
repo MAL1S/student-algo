@@ -2,6 +2,7 @@ package domain.data
 
 import data.model.Participation
 import data.model.Project
+import data.model.Student
 import domain.data.ImportCsvData.splitToProject
 import java.io.File
 
@@ -21,15 +22,17 @@ object ImportCsvData {
         return projects
     }
 
-    fun getParticipationsFromFile(filePath: String): List<Participation> {
+    fun getParticipationsFromFile(filePath: String, studentExceptions: List<Student>): List<Participation> {
         val participations = mutableListOf<Participation>()
         val split = splitFileFromCsvFormat(filePath = filePath)
         for ((index, str) in split.withIndex()) {
             if (index == 0) continue
-            participations.add(
-                str.replaceAllExtraSymbolsInParticipation()
-                    .splitToParticipation(index)
-            )
+            val toAdd = str.replaceAllExtraSymbolsInParticipation()
+                .splitToParticipation(index, studentExceptions)
+
+            if (toAdd != null) {
+                participations.add(toAdd)
+            }
         }
         return participations
     }
@@ -77,45 +80,39 @@ object ImportCsvData {
 
         val project = Project(
             id = split[0].toInt(),
-            title = split[3],
-            places = split[4].toInt(),
-            freePlaces = split[4].toInt(),
-            supervisors = split[15].split(","),
-            groups = split[18].replace(" ", "").split(";"),
-            skills = split[19].split(";")
+            title = split[1],
+            places = split[2].toInt(),
+            freePlaces = split[2].toInt(),
+            supervisors = split[4].split(","),
+            groups = split[5].replace(" ", "").split(";"),
+            skills = split[6].split(";")
         )
-        //println(project)
 
         return if (project.places == 100) null
         else project
     }
 
-    private fun String.splitToParticipation(index: Int): Participation {
+    private fun String.splitToParticipation(index: Int, studentExceptions: List<Student>): Participation? {
         val firstQuote = this.indexOfFirst { it == '"' }
         val secondQuote = this.substring(firstQuote + 1).indexOfFirst { it == '"' }
         val split = this
             .replace("\n", "")
-            .removeRange(firstQuote..secondQuote + firstQuote)
+            .replace("\"", "")
             .split(",")
-        //println(split)
 
-        //old file
-//        return Participation(
-//            id = split[0].toInt(),
-//            priority = split[3].toInt(),
-//            projectId = split[4].toInt(),
-//            studentId = split[6].toInt(),
-//            stateId = 0
-//        )
-
-        //new file
-        return Participation(
+        val participation = Participation(
             id = split[0].toInt(),
-            priority = split[3].toInt(),
-            projectId = split[5].toInt(),
-            studentId = split[7].toInt(),
+            priority = split[2].toInt(),
+            projectId = split[3].toInt(),
+            studentId = split[4].toInt(),
+            studentName = split[5],
+            group = split[6],
             stateId = 0
         )
+
+        if (studentExceptions.map{ it.id }.contains(participation.studentId)) return null
+
+        return participation
     }
 
     private fun String.splitWithQuoteBlocks(): List<String> {

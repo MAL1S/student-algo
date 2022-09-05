@@ -80,8 +80,7 @@ class Distribution(
                         participations.filter {
                             it.projectId == project.id &&
                                     it.priority == priority &&
-                                    it.stateId == 0 &&
-                                    students.map { stud -> stud.id }.contains(it.studentId)
+                                    it.stateId == 0
                         }
                             .toMutableList()
 
@@ -109,6 +108,7 @@ class Distribution(
 
     private fun findNotAppliedStudents() {
         val notAppliedParticipations = participations.filter { it.stateId == 0 }
+
         notAppliedStudents =
             participations.filter { it.stateId == 0 && students.map { stud -> stud.id }.contains(it.studentId) }
                 .map { it.studentId }.toSet()
@@ -161,6 +161,8 @@ class Distribution(
                         priority = if (notAppliedStudents.contains(bestMatchingStudent.id)) 5 else 4,
                         projectId = project.id,
                         studentId = bestMatchingStudent.id,
+                        studentName = bestMatchingStudent.fio,
+                        group = bestMatchingStudent.realGroup,
                         stateId = 1
                     )
                 )
@@ -190,6 +192,8 @@ class Distribution(
                             priority = if (notAppliedStudents.contains(bestMatchingStudent.id)) 4 else 5,
                             projectId = project.id,
                             studentId = bestMatchingStudent.id,
+                            studentName = bestMatchingStudent.fio,
+                            group = bestMatchingStudent.realGroup,
                             stateId = 1
                         )
                     )
@@ -208,12 +212,17 @@ class Distribution(
             .sortedBy { it.freePlaces }
             .reversed()
 
+        println("PROJECTS TO CUM = ${projects.map { it.groups }}")
+
         var areProjectsFull = false
         var maxFreeStudentsCount = projects.maxOfOrNull { it.freePlaces }!!
 
-        while (!areProjectsFull && notApplied.isNotEmpty() && maxFreeStudentsCount > 0) {
+        while (!areProjectsFull && notApplied.isNotEmpty()) {
+            var notAppliedSizeBefore = notApplied.size
             for (project in projects) {
-                if (project.freePlaces != maxFreeStudentsCount) continue
+                if (project.freePlaces == 0) continue
+                if (maxFreeStudentsCount <= 0) break
+                //if (project.freePlaces != maxFreeStudentsCount) continue
 
                 val bestMatchingStudent = findBestMatch(project = project)
                 if (bestMatchingStudent != null) {
@@ -223,15 +232,18 @@ class Distribution(
                             priority = if (notAppliedStudents.contains(bestMatchingStudent.id)) 4 else 5,
                             projectId = project.id,
                             studentId = bestMatchingStudent.id,
+                            studentName = bestMatchingStudent.fio,
+                            group = bestMatchingStudent.realGroup,
                             stateId = 1
                         )
                     )
+                    notApplied.removeIf { it.id == bestMatchingStudent.id }
                     projects[projects.indexOf(project)].freePlaces--
                     maxFreeStudentsCount = projects.maxOfOrNull { it.freePlaces }!!
-                } else {
-                    areProjectsFull = true
-                    break
                 }
+            }
+            if (notAppliedSizeBefore == notApplied.size) {
+                areProjectsFull = true
             }
         }
     }
@@ -249,6 +261,8 @@ class Distribution(
                             priority = 4,
                             projectId = project.id,
                             studentId = bestMatchingStudent.id,
+                            studentName = bestMatchingStudent.fio,
+                            group = bestMatchingStudent.realGroup,
                             stateId = 1
                         )
                     )
@@ -272,19 +286,19 @@ class Distribution(
 
         for (project in excessProjects) {
 
-            //println("${project.id}")
             val excessParticipations = participations.filter { it.projectId == project.id && it.stateId == 1 }
 
             for (i in excessParticipations) {
+                println("${students.map { it.id }.contains(i.studentId)}  ${i.studentId}")
                 val student = students.find { it.id == i.studentId }!!
                 val suitedProjects =
                     sortedProjects.filter {
-                        //println("${it.groups.contains(student.training_group)} ${student.training_group} ${it.groups}")
+
                         it.id != project.id &&
                                 it.groups.contains(student.training_group) &&
                                 it.freePlaces <= (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_MIN_CAPACITY)
                     }
-                //println("${student.training_group} $suitedProjects")
+
                 val suitedProject = suitedProjects.maxByOrNull { it.freePlaces }
                 if (suitedProject != null) {
                     participations.remove(i)
@@ -292,18 +306,18 @@ class Distribution(
                         Participation(
                             id = participationIndex++,
                             priority = 4,
-                            projectId = suitedProject!!.id,
+                            projectId = suitedProject.id,
                             studentId = student.id,
+                            studentName = student.fio,
+                            group = student.realGroup,
                             stateId = 1
                         )
                     )
 
-                    //println("1id = ${project.id}, 2id = ${projects[projects.indexOf(project)].id}")
                     projects[projects.indexOf(project)].freePlaces++
-//                if (suitedProject.freePlaces > 0) {
-                    //println("1id = ${suitedProject.id}, 2id = ${projects[projects.indexOf(suitedProject)].id}")
+
                     projects[projects.indexOf(suitedProject)].freePlaces--
-                    //}
+
                 }
             }
         }
@@ -318,7 +332,6 @@ class Distribution(
         }
 
         var groupStudent: Student? = null
-        var toFillStudent: Student? = null
 
         for (student in notApplied) {
             if (special) {
@@ -330,55 +343,12 @@ class Distribution(
             } else {
                 if (groupStudent == null && project.groups.contains(student.training_group)) {
                     groupStudent = student
-                } else if (toFillStudent == null) {
-                    toFillStudent = student
                 }
             }
-
-//            var isEmpty: Boolean
-//            var similarities: Int
-//
-//            if (students[student].skills.isEmpty()) {
-//                similarities = getSimilarSkillsCount(
-//                    projectSkills = projectSkills.map { it.skill },
-//                    studentSkills = GenerateSkills.groupSkills[students[student].training_group]!!
-//                )
-//                isEmpty = true
-//            } else {
-//                similarities = getSimilarSkillsCount(
-//                    projectSkills = projectSkills.map { it.skill },
-//                    studentSkills = students[student].skills
-//                )
-//                isEmpty = false
-//            }
-
-//            if (isEmpty) {
-//                if (similarities >= bestMatchingEmpty) {
-//                    bestMatchingEmpty = similarities
-//                    bestMatchingEmptyStudent = student
-//                }
-//            } else {
-//                if (similarities > bestMatching) {
-//                    bestMatching = similarities
-//                    bestMatchingStudent = student
-//                    if (bestMatching == projectSkills.size) {
-//                        notApplied.remove(bestMatchingStudent)
-//                        return bestMatchingStudent
-//                    }
-//                } else if (bestMatchingStudent == null) {
-//                    bestMatchingStudent = student
-//                }
-//            }
         }
 
-        if (!special) bestMatchingStudent = groupStudent ?: toFillStudent
+        if (!special) bestMatchingStudent = groupStudent
 
-//        if (bestMatchingStudent == null) {
-//            notApplied.remove(bestMatchingEmptyStudent!!)
-//
-//        } else {
-//            notApplied.remove(bestMatchingStudent)
-//        }
         notApplied.removeIf { it.id == bestMatchingStudent?.id }
         return bestMatchingStudent
     }

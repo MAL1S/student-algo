@@ -43,14 +43,14 @@ object GenerateParticipations {
                     }
 
                     val project = thisGroupProjects[ifFirst ?: (thisGroupProjects.indices).random()]
-                    val participation = Participation(
-                        id = participationIndex++,
-                        priority = priority,
-                        projectId = project.id,
-                        studentId = student.id,
-                        stateId = States.states[0].id
-                    )
-                    participations.add(participation)
+//                    val participation = Participation(
+//                        id = participationIndex++,
+//                        priority = priority,
+//                        projectId = project.id,
+//                        studentId = student.id,
+//                        stateId = States.states[0].id
+//                    )
+                    //participations.add(participation)
                     usedStudentToProjectCombinations[student.id] = mutableListOf(project)
                 } else {
                     if (priority == 2 && SKIP_SECOND_FREQUENCY.random() == 0) continue
@@ -73,14 +73,14 @@ object GenerateParticipations {
                         project = thisGroupProjects[(thisGroupProjects.indices).random()]
                     }
 
-                    val participation = Participation(
-                        id = participationIndex++,
-                        priority = priority,
-                        projectId = project.id,
-                        studentId = student.id,
-                        stateId = States.states[0].id
-                    )
-                    participations.add(participation)
+//                    val participation = Participation(
+//                        id = participationIndex++,
+//                        priority = priority,
+//                        projectId = project.id,
+//                        studentId = student.id,
+//                        stateId = States.states[0].id
+//                    )
+//                    participations.add(participation)
                     usedStudentToProjectCombinations[student.id]!!.add(project)
                 }
             }

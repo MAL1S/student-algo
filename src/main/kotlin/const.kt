@@ -10,7 +10,6 @@ val STUDENT_WITH_NULL_SKILLS_CHANCE = (0..3) //шанс генерации ст�
 val PROJECT_GROUPS_COUNT = (1..3) //количество групп студентов, допущенных для проекта
 
 const val STUDENT_COUNT = 300 //количесто студентов
-//const val SUPERVISOR_COUNT = 15 //количество преподавателей
 const val PROJECTS_COUNT = 30 //количество проектов
 const val PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY = 9 //граница "от" для вместимости проектов
 const val PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY = 15 //граница "до" для вместимости проектов
