@@ -5,5 +5,7 @@ data class Participation(
     var priority: Int,
     var projectId: Int,
     val studentId: Int,
+    val studentName: String,
+    val group: String,
     var stateId: Int
 )
