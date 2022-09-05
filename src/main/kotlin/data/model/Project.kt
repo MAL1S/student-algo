@@ -19,4 +19,5 @@ data class Project(
     var study_result: String = "",
     var product_result: String = "",
     var supervisors: List<String> = emptyList(),
+    var skills: List<String> = emptyList()
 )

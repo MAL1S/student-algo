@@ -11,6 +11,16 @@ import java.io.FileInputStream
 
 object ImportExcelData {
 
+    fun getProjectsFromDir(filePath: String): List<Project> {
+        val projects = mutableListOf<Project>()
+        File(filePath).walk().forEach {
+            if (!it.isDirectory) {
+                projects.addAll(getProjectsFromFile(it.absolutePath))
+            }
+        }
+        return projects
+    }
+
     fun getProjectsFromFile(filePath: String): List<Project> {
         val wb = XSSFWorkbook(FileInputStream(File(filePath)))
 
@@ -26,25 +36,14 @@ object ImportExcelData {
             project.id = index
             project.title = row.getCell(1).stringCellValue
             project.places = PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY
-//            val additionalGroups = if (row.getCell(7).stringCellValue.isNotEmpty()) {
-//                ", " + row.getCell(7).stringCellValue
-//            } else ""
-//            project.groups = (row.getCell(6).stringCellValue + additionalGroups)
-//            .split(", ")
-//                .map {
-//                    println("$it - ${it.indexOfFirst { symbol -> symbol == ' ' }}")
-//                    it.substring(0, it.indexOfFirst { symbol -> symbol == ' ' })
-//                }
+
             val additionalGroups = if (row.getCell(7).stringCellValue.isNotEmpty()) {
                 ", " + row.getCell(7).stringCellValue
             } else ""
             project.groups = (row.getCell(6).stringCellValue + additionalGroups)
                 .split(" ")
                 .filter { GenerateProjects.groups.contains(it) }
-//                .map {
-//                    println(it)
-//                    it.substring(0, it.indexOfFirst { symbol -> symbol == 'б' })
-//                }
+
             project.goal = row.getCell(3).stringCellValue
             project.description = row.getCell(4).stringCellValue
             project.difficulty = row.getCell(9).numericCellValue.toInt()
@@ -70,7 +69,31 @@ object ImportExcelData {
         return list
     }
 
-    fun getStudentsFromFile(filePath: String, exceptionsFilePath: String): List<Student> {
+    fun getStudentsFromFile(filePath: String): List<Student> {
+        val wb = XSSFWorkbook(FileInputStream(File(filePath)))
+
+        val sheet = wb.getSheetAt(0)
+
+        val list = mutableListOf<Student>()
+        for (i in 1..sheet.lastRowNum) {
+            val row = sheet.getRow(i)
+
+            val student = Student()
+
+            student.id = row.getCell(5).numericCellValue.toInt()
+            student.fio = row.getCell(3).stringCellValue
+            val group = row.getCell(6).stringCellValue
+            student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
+            student.realGroup = row.getCell(6).stringCellValue
+
+            if (!student.training_group.endsWith("з")) {
+                list.add(student)
+            }
+        }
+        return list
+    }
+
+    fun getStudentsFromFile(filePath: String, exceptionsFilePath: String): Pair<List<Student>, List<Student>> {
         val wb = XSSFWorkbook(FileInputStream(File(filePath)))
         val wbException = XSSFWorkbook(FileInputStream(File(exceptionsFilePath)))
 
@@ -86,33 +109,44 @@ object ImportExcelData {
             student.fio = row.getCell(0).stringCellValue
             val group = row.getCell(1).stringCellValue
                 .replace(" ", "")
+            //println(group)
             student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
 
+            //println(student)
             exceptionList.add(student)
         }
 
         val list = mutableListOf<Student>()
-        for (i in 1..sheet.lastRowNum) {
+        for (i in 2..sheet.lastRowNum) {
             val row = sheet.getRow(i)
+
+            val role = row.getCell(4).stringCellValue
+            val group = row.getCell(6).stringCellValue
+            val institute = row.getCell(8).stringCellValue
+            if (role != "студент" ||
+                institute.contains("БРИКС") ||
+                (!group.contains("19") && !group.contains("20"))
+            ) {
+                continue
+            }
 
             val student = Student()
 
             student.id = row.getCell(5).numericCellValue.toInt()
             student.fio = row.getCell(3).stringCellValue
-            val group = row.getCell(6).stringCellValue
             student.training_group = group.substring(0, group.indexOfFirst { it == '-' })
-            student.realGroup = row.getCell(6).stringCellValue
+            student.realGroup = group
 
-            if (exceptionList.find { it.fio == student.fio && it.training_group == student.training_group } != null || student.training_group == "ИБб" || student.training_group == "ИИКб") {
+            if (exceptionList.find { it.fio == student.fio && it.training_group.lowercase() == student.training_group.lowercase() } != null) {
+                val index = exceptionList.indexOfFirst { it.fio == student.fio && it.training_group.lowercase() == student.training_group.lowercase() }
+                exceptionList[index].id = student.id
+
                 continue
             }
 
-            println(student)
+
             list.add(student)
         }
-//        for (i in list) {
-//            println(i)
-//        }
-        return list
+        return Pair(list, exceptionList)
     }
 }

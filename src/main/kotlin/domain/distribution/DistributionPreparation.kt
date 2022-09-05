@@ -4,13 +4,16 @@ import data.model.Participation
 import data.model.Student
 
 class DistributionPreparation(
-    students: List<Student>,
+    private val students: List<Student>,
     private val participations: List<Participation>
 ) {
 
     val freeStudents = students.toMutableList()
 
     fun prepare() {
-        freeStudents.removeIf { participations.find { p -> it.id == p.studentId } == null }
+        val parts = participations.map { it.studentId }.toSet()
+        parts.forEach {
+            freeStudents.removeIf { stud -> it == stud.id }
+        }
     }
 }
