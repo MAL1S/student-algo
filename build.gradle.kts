@@ -17,6 +17,7 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.5")
     implementation("com.google.code.gson:gson:2.8.2")
     implementation("com.grapecity.documents:gcexcel:2.1.0")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.6.0")
     testImplementation(kotlin("test"))
 }
 

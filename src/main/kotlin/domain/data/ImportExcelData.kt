@@ -69,6 +69,29 @@ object ImportExcelData {
         return list
     }
 
+    fun getShit(filePath: String): List<Map<String, String>> {
+        val wb = XSSFWorkbook(FileInputStream(File(filePath)))
+
+        val sheet = wb.getSheetAt(0)
+
+        val list = mutableListOf<Map<String, String>>()
+        for (i in 0..sheet.lastRowNum) {
+            val row = sheet.getRow(i)
+
+            val map = mutableMapOf<String, String>()
+
+            map["stud"]=row.getCell(0).stringCellValue
+            map["group"]=row.getCell(1).stringCellValue
+            val id =row.getCell(2).numericCellValue
+            map["proj"]=row.getCell(4).numericCellValue.toString()
+
+            if (id == null) continue
+
+            list.add(map)
+        }
+        return list
+    }
+
     fun getStudentsFromFile(filePath: String): List<Student> {
         val wb = XSSFWorkbook(FileInputStream(File(filePath)))
 

@@ -174,13 +174,11 @@ class Distribution(
     }
 
     private fun distributeSilentStudents(isUniform: Boolean = false) {
-        //println("sorted = ${sortProjectList()}")
         for (project in sortProjectList()) {
             val places: Int = if (isUniform) {
                 project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
             } else {
                 project.freePlaces
-                //project.freePlaces - (PROJECT_STUDENT_CAPACITY_UPPER_BOUNDARY - PROJECT_STUDENT_CAPACITY_LOWER_BOUNDARY)
             }
             for (i in 0 until places) {
                 val bestMatchingStudent: Student? = findBestMatch(project = project)
@@ -198,7 +196,6 @@ class Distribution(
                         )
                     )
                     projects[projects.indexOf(project)].freePlaces--
-                    //println("${project.id} ${projects[projects.indexOf(project)].freePlaces}")
                 } else {
                     break
                 }
@@ -212,8 +209,6 @@ class Distribution(
             .sortedBy { it.freePlaces }
             .reversed()
 
-        println("PROJECTS TO CUM = ${projects.map { it.groups }}")
-
         var areProjectsFull = false
         var maxFreeStudentsCount = projects.maxOfOrNull { it.freePlaces }!!
 
@@ -222,7 +217,6 @@ class Distribution(
             for (project in projects) {
                 if (project.freePlaces == 0) continue
                 if (maxFreeStudentsCount <= 0) break
-                //if (project.freePlaces != maxFreeStudentsCount) continue
 
                 val bestMatchingStudent = findBestMatch(project = project)
                 if (bestMatchingStudent != null) {
@@ -336,7 +330,6 @@ class Distribution(
         for (student in notApplied) {
             if (special) {
                 if (student.training_group == "ИИКб") {
-                    //println(student)
                     bestMatchingStudent = student
                     break
                 }
