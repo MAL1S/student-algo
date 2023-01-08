@@ -55,3 +55,7 @@ fun main() {
         dis.executeUniformly()
     }
 }
+
+fun bruh() {
+    malis()
+}
